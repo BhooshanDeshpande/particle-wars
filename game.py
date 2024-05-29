@@ -40,7 +40,9 @@ def main():
         screen.fill(WHITE)
 
         for particle in particles:    
-            particle.vel, particle.angle = particle.update_velocity(particles)
+            particle.acc, particle.angle = particle.update_velocity(particles)
+            
+        for particle in particles:
             particle.update()
             particle.draw(screen)
 
@@ -58,19 +60,24 @@ def main():
                     if p1.team == p2.team:
                         continue
 
-                    team1_count = sum(1 for p in particles if p.team == p1.team and p.in_range(p2))
-                    team2_count = sum(1 for p in particles if p.team == p2.team and p.in_range(p1))
+                    if p1.team != p2.team:
 
-                    p1_damage = p1.attack / (team1_count + 1)
-                    p2_damage = p2.attack / (team2_count + 1)
+                        team1_count = sum(1 for p in particles if p.team == p1.team and p.in_range(p2))
+                        team2_count = sum(1 for p in particles if p.team == p2.team and p.in_range(p1))
 
-                    p1.health -= p2_damage
-                    p2.health -= p1_damage
+                        if (p1.is_facing(p2)): 
+                            p1.attack = PARTICLE_ATTACK_BOOST
+                        
+                        if (p2.is_facing(p1)):
+                            p2.attack = PARTICLE_ATTACK_BOOST
 
-                    if p1.health <= 0:
-                        particles.remove(p1)
-                    if p2.health <= 0:
-                        particles.remove(p2)
+                        p1.health -= p2.attack / (team2_count + 1)
+                        p2.health -= p1.attack / (team1_count + 1)
+
+                        if p1.health <= 0 and p1 in particles:
+                            particles.remove(p1)
+                        if p2.health <= 0 and p2 in particles:
+                            particles.remove(p2)
 
         p2_health = int(sum(p.health for p in particles if p.team == PLAYER_TWO))
         p1_health = int(sum(p.health for p in particles if p.team == PLAYER_ONE))
@@ -93,7 +100,7 @@ def main():
         draw_text(screen, f"{winner} wins!!", 370, 300, font_size=50)
 
     pygame.display.flip()
-    sleep(1)
+    sleep(3)
     pygame.quit()
 
 if __name__ == "__main__":
